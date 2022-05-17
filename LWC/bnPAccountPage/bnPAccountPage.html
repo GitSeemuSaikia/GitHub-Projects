@@ -1,0 +1,118 @@
+<template>
+    <template if:true={isbatchrunning}>
+        <lightning-icon icon-name="utility:error" alternative-text="Error!" variant="error"
+            title="error variant x-small" size="x-small"></lightning-icon>&nbsp;&nbsp;
+        <label class="slds-form-element__label">{label.Unable_to_execute_Agreements_Without_Payee}</label>
+        <lightning-button-icon icon-name="utility:close" variant="bare" alternative-text="close"
+            class="slds-m-left_xx-small" title="close" onclick={handleclose}></lightning-button-icon>
+    </template>
+    <template if:true={jobScheduled}>
+        <lightning-icon icon-name="utility:success" alternative-text="Success!" variant="success"
+            title="success variant x-small" size="x-small"></lightning-icon>&nbsp;&nbsp;
+        <label class="slds-form-element__label">{label.Agreements_without_payee_job}</label>
+        <lightning-button-icon icon-name="utility:close" variant="bare" alternative-text="close"
+            class="slds-m-left_xx-small" title="close" onclick={handleclose}></lightning-button-icon>
+    </template>
+    <template if:true={isInsufficiantAccess}>
+        <lightning-icon icon-name="utility:error" alternative-text="Error!" variant="error"
+            title="error variant x-small" size="x-small"></lightning-icon>&nbsp;&nbsp;
+        <label class="slds-form-element__label">{label.Insufficient_Privileges}</label>
+        <lightning-button-icon icon-name="utility:close" variant="bare" alternative-text="close"
+            class="slds-m-left_xx-small" title="close" onclick={handleclose}></lightning-button-icon>
+    </template>
+    <div class="slds-page-header" role="banner">
+        <h1 class="slds-text-heading--medium"><b>{label.Billing_and_Payment_Dealer_and_Payee_Account}</b></h1>
+    </div>
+    <div align="right" draggable="false">
+        <lightning-button label="Run Agreements Without Payee Job" variant="brand" onclick={runbatch}>
+        </lightning-button>
+    </div>
+    <template if:true={loadingSpinner}>
+        <lightning-spinner alternative-text="Loading" variant="brand" size="large"></lightning-spinner>
+    </template>
+    <div class="slds-box">
+        <lightning-radio-group name="accountGroup" label="Select Search Type" options={options} value={selectedValue}
+            onchange={handleRadioButtonChange} type="radio"></lightning-radio-group>
+        <div class="slds-list_horizontal">
+            <template if:true={isDealer}>
+                <span class="slds-section__title">{label.Dealer_Search}</span> &nbsp; &nbsp;
+            </template>
+            <template if:true={isPayee}>
+                <span class="slds-section__title">{label.Payee_Search}</span> &nbsp; &nbsp;
+            </template>
+            <template if:true={isClassificationCode}>
+                <span class="slds-section__title">{label.Classification_Code}</span> &nbsp; &nbsp;
+            </template>
+            <lightning-input name="search" type="search" onchange={handleChange} minlength="2" required
+                placeholder={placeholder} message-when-too-short="Minimum 2 characters required for search.">
+            </lightning-input>
+            &nbsp; &nbsp;
+            <lightning-button class="buttoncenter" variant="brand" label="Search" onclick={handleSearch}>
+            </lightning-button>
+        </div>
+    </div>
+    <template if:true={isDefaultTable}>
+        <c-auto-b-p-data-tablelwc columns={dealerColumns} record-list={recordList} display-title={displayTitle} onrowaction={handleRowAction}>
+        </c-auto-b-p-data-tablelwc>
+        <c-client-fee-balance></c-client-fee-balance>
+    </template>
+    <template if:true={isDealerTable}>
+        <c-auto-b-p-data-tablelwc columns={dealerColumns} record-list={recordList} display-title={displayTitle} onrowaction={handleRowAction}>
+        </c-auto-b-p-data-tablelwc>
+        <c-client-fee-balance></c-client-fee-balance>
+    </template>
+    <template if:true={isPayeeTable}>
+        <c-auto-b-p-data-tablelwc columns={payeesColumns} record-list={recordList} display-title={displayTitle} onrowaction={handleRowAction}>
+        </c-auto-b-p-data-tablelwc>
+    </template>
+    <c-refund-case-payee-creation></c-refund-case-payee-creation>
+    <c-dealer-balance></c-dealer-balance>
+    <c-payee-balance></c-payee-balance>
+    <c-net-invoices></c-net-invoices>
+    <template if:true={isDealerProductModalOpen}>
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeDealerProductModal}>
+                            <lightning-icon icon-name="utility:close"
+                                alternative-text="close"
+                                variant="inverse"
+                            size="small" ></lightning-icon>
+                            <span class="slds-assistive-text">{label.Close}</span>
+                        </button>
+                        <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">
+                            <lightning-icon icon-name="standard:contact" size="small"></lightning-icon> {label.Dealer_Products}
+                        </h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <c-auto-b-p-data-tablelwc columns={dealerProductColumns} record-list={dealerProductRecordList} display-title="" onrowaction={handleRowAction}>
+                        </c-auto-b-p-data-tablelwc>
+                    </div>
+                </div>
+           </section>
+           <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+    <template if:true={isPayeeDealerModalOpen}>
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closePayeeDealerAccountModal}>
+                        <lightning-icon icon-name="utility:close"
+                            alternative-text="close"
+                            variant="inverse"
+                            size="small" ></lightning-icon>
+                        <span class="slds-assistive-text">{label.Close}</span>
+                    </button>
+                    <h2 id="modal-heading-02" class="slds-text-heading_medium slds-hyphenate">
+                        <lightning-icon icon-name="standard:account" size="small"></lightning-icon> {label.Dealer_Accounts}
+                    </h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <c-auto-b-p-data-tablelwc columns={dealerPayeesColumns} record-list={PayeeDealerRecordList} display-title="" onrowaction={handleRowAction}>
+                    </c-auto-b-p-data-tablelwc>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+</template>
